@@ -1,6 +1,9 @@
 import { dates } from "/utils/dates";
 import OpenAI from "openai";
 
+const openaiApiKey = import.meta.env.VITE_APP_OPENAI_API_KEY;
+const polygonApiKey = import.meta.env.VITE_APP_POLYGON_API_KEY;
+
 const tickersArr = [];
 
 const generateReportBtn = document.querySelector(".generate-report-btn");
@@ -44,7 +47,7 @@ async function fetchStockData() {
   try {
     const stockData = await Promise.all(
       tickersArr.map(async (ticker) => {
-        const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/day/${dates.startDate}/${dates.endDate}?apiKey=${process.env.POLYGON_API_KEY}`;
+        const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/day/${dates.startDate}/${dates.endDate}?apiKey=${polygonApiKey}`;
         const response = await fetch(url);
         const data = await response.text();
         const status = await response.status;
@@ -64,17 +67,32 @@ async function fetchStockData() {
 }
 
 async function fetchReport(data) {
-  console.log(data);
-  /**
-   * Challenge:
-   * 1. Use the OpenAI API to generate a report advising
-   * on whether to buy or sell the shares based on the data
-   * that comes in as a parameter.
-   *
-   * 🎁 See hint.md for help!
-   *
-   * 🏆 Bonus points: use a try catch to handle errors.
-   * **/
+  const messages = [
+    {
+      role: "system",
+      content:
+        "You are a trading guru. Given data on share prices over the past 3 days, write a report of no more than 150 words describing the stocks performance and recommending whether to buy, hold or sell.",
+    },
+    {
+      role: "user",
+      content: data,
+    },
+  ];
+
+  try {
+    const openai = new OpenAI({
+      apiKey: openaiApiKey,
+      dangerouslyAllowBrowser: true,
+    });
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: messages,
+    });
+    renderReport(response.choices[0].message.content);
+  } catch (err) {
+    console.log("Error:", err);
+    loadingArea.innerText = "Unable to access AI. Please refresh and try again";
+  }
 }
 
 function renderReport(output) {
@@ -85,3 +103,14 @@ function renderReport(output) {
   report.textContent = output;
   outputArea.style.display = "flex";
 }
+
+/**
+ * Challenge:
+ * 1. Use the OpenAI API to generate a report advising
+ * on whether to buy or sell the shares based on the data
+ * that comes in as a parameter.
+ *
+ * 🎁 See hint.md for help!
+ *
+ * 🏆 Bonus points: use a try catch to handle errors.
+ * **/
