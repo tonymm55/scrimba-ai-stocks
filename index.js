@@ -95,12 +95,12 @@ async function fetchReport(data) {
   }
 }
 
-function renderReport(output) {
+function renderReport(blahblah) {
   loadingArea.style.display = "none";
   const outputArea = document.querySelector(".output-panel");
   const report = document.createElement("p");
   outputArea.appendChild(report);
-  report.textContent = output;
+  report.textContent = blahblah;
   outputArea.style.display = "flex";
 }
 
