@@ -50,7 +50,7 @@ async function fetchStockData() {
         const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/day/${dates.startDate}/${dates.endDate}?apiKey=${polygonApiKey}`;
         const response = await fetch(url);
         const data = await response.text();
-        const status = await response.status;
+        const status = response.status;
         if (status === 200) {
           apiMessage.innerText = "Creating report...";
           return data;
@@ -87,8 +87,12 @@ async function fetchReport(data) {
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: messages,
+      // Stick to ~1 for a conservative temperature (1-2),
+      temperature: 1.1,
+      // max_tokens: 150, usually infinity, but add for brevity
     });
     renderReport(response.choices[0].message.content);
+    console.log(response);
   } catch (err) {
     console.log("Error:", err);
     loadingArea.innerText = "Unable to access AI. Please refresh and try again";
